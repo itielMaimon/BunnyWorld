@@ -1,0 +1,13 @@
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\AdvancedBunnyWorld\bin\Debug\netcoreapp3.1\AdvancedBunnyWorld.exe
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\AdvancedBunnyWorld\bin\Debug\netcoreapp3.1\AdvancedBunnyWorld.deps.json
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\AdvancedBunnyWorld\bin\Debug\netcoreapp3.1\AdvancedBunnyWorld.runtimeconfig.json
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\AdvancedBunnyWorld\bin\Debug\netcoreapp3.1\AdvancedBunnyWorld.runtimeconfig.dev.json
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\AdvancedBunnyWorld\bin\Debug\netcoreapp3.1\AdvancedBunnyWorld.dll
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\AdvancedBunnyWorld\bin\Debug\netcoreapp3.1\AdvancedBunnyWorld.pdb
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\AdvancedBunnyWorld\obj\Debug\netcoreapp3.1\AdvancedBunnyWorld.csproj.CoreCompileInputs.cache
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\AdvancedBunnyWorld\obj\Debug\netcoreapp3.1\AdvancedBunnyWorld.AssemblyInfoInputs.cache
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\AdvancedBunnyWorld\obj\Debug\netcoreapp3.1\AdvancedBunnyWorld.AssemblyInfo.cs
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\AdvancedBunnyWorld\obj\Debug\netcoreapp3.1\AdvancedBunnyWorld.dll
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\AdvancedBunnyWorld\obj\Debug\netcoreapp3.1\AdvancedBunnyWorld.pdb
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\AdvancedBunnyWorld\obj\Debug\netcoreapp3.1\AdvancedBunnyWorld.genruntimeconfig.cache
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\AdvancedBunnyWorld\obj\Debug\netcoreapp3.1\AdvancedBunnyWorld.csprojAssemblyReference.cache
