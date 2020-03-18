@@ -21,6 +21,16 @@ namespace BunnyWorld
 			this.house = house;
 		}
 
+		public void TurnToWhite()
+		{
+			if (sex == "Male")
+				Console.WriteLine("Lord {0} of bunny house {1} turned to a White! Kill him and burn his body!", name, house);
+			else
+				Console.WriteLine("Lady {0} of bunny house {1} turned to a White! Kill her and burn her body!", name, house);
+			color = "White";
+			house = "White Walker";
+		}
+
 		public void PrintBunnyData()
 		{
 			Console.WriteLine("Sex: {0}, Color: {1}, Age: {2}, Name: {3}, House: {4}", sex, color, age, name, house);
@@ -64,6 +74,7 @@ namespace BunnyWorld
 
 				string color;
 				string house;
+				/// 2% chance the bunny will be a white walker.
 				if (new Random().NextDouble() < 0.98)
 				{
 					color = Enum.GetName(typeof(Colors), new Random().Next(6));
@@ -135,6 +146,7 @@ namespace BunnyWorld
 
 						string color;
 						string house;
+						/// 2% chance the bunny will be a white walker.
 						if (new Random().NextDouble() < 0.98)
 						{
 							color = bunny.color;
@@ -158,19 +170,23 @@ namespace BunnyWorld
 				PrintANewbornBunny(newBornBunny);
 			}
 
+			// Start the infection of the White Walker bunnies. (Infection includes newborn bunnies).
+			WhiteWalkerInfection(bunnies);
 
 			if (bunnies.Count > 1000)
 			{
 				// Kill half the population randomly.
+				LongHardWinter(bunnies);
 			}
 
-			// PrintBunnies(bunnies);
+			PrintBunnies(bunnies);
 			Console.WriteLine("Press any key for next turn. Press ESC to stop.");
 		}
 
 		// Finding a random adult male bunny for mating.
 		private static Bunny FindAnAdultMale(LinkedList<Bunny> bunnies)
 		{
+			// Creating a list of all the adult males bunnies.
 			LinkedList<Bunny> adultMaleBunnies = new LinkedList<Bunny>();
 
 			foreach (Bunny bunny in bunnies)
@@ -179,14 +195,70 @@ namespace BunnyWorld
 					adultMaleBunnies.AddLast(bunny);
 			}
 
-			// Creating a random index to get a randomized adult male bunny.
-			int selectedMaleBunnyIndex = new Random().Next(adultMaleBunnies.Count);
-			foreach(Bunny adultMaleBunny in adultMaleBunnies)
+			// Return a random adult male bunny.
+			return GetARandomBunny(adultMaleBunnies);
+		}
+
+		// Turn Noble bunnies into White Walkers bunnies.
+		private static void WhiteWalkerInfection(LinkedList<Bunny> bunnies)
+		{
+			// We need to exclude all the White Walker bunnies from the Noble bunnies.
+			LinkedList<Bunny> nobleBunnies = new LinkedList<Bunny>();
+			int whiteWalkersCount = 0;
+
+			foreach (Bunny bunny in bunnies)
 			{
-				if (selectedMaleBunnyIndex == 0)
-					return adultMaleBunny;
+				if (bunny.house != "White Walker")
+					nobleBunnies.AddLast(bunny);
+				else
+					whiteWalkersCount++;
+			}
+
+			/* Continue for as long as there are more existing Noble bunnies to infect.
+			 * Stop when we infect all the needed Noble bunnies, or when we run out of Noble bunnies.
+			 */
+			while (whiteWalkersCount > 0 && nobleBunnies.Count > 0)
+			{
+				Bunny randomNobleBunny = GetARandomBunny(nobleBunnies);
+				if (randomNobleBunny != null)
+				{
+					randomNobleBunny.TurnToWhite();
+					// Remove this Noble bunny from the list, since now he is a White Walker. (Prevents repetition).
+					nobleBunnies.Remove(randomNobleBunny);
+				}
+				// Downgrading the counter until we infect all the needed Noble bunnies.
+				whiteWalkersCount--;
+			}
+		}
+
+		// Kill exactly half the bunnies population randomly.
+		private static void LongHardWinter(LinkedList<Bunny> bunnies)
+		{
+			// Marking the half population count.
+			int halfBunniesPopulation = bunnies.Count / 2;
+
+			// Kill bunnies until we reach the half population count.
+			while (bunnies.Count > halfBunniesPopulation)
+			{
+				Bunny randomBunny = GetARandomBunny(bunnies);
+				if (randomBunny != null)
+				{
+					bunnies.Remove(randomBunny);
+					PrintADeadBunny(randomBunny);
+				}
+			}
+		}
+
+		private static Bunny GetARandomBunny(LinkedList<Bunny> bunnies)
+		{
+			// Creating a random index to get a randomized bunny.
+			int selectedBunnyIndex = new Random().Next(bunnies.Count);
+			foreach (Bunny bunny in bunnies)
+			{
+				if (selectedBunnyIndex == 0)
+					return bunny;
 				// Downgrading the index until we find the randomized bunny.
-				selectedMaleBunnyIndex--;
+				selectedBunnyIndex--;
 			}
 			return null;
 		}
