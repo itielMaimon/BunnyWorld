@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace BunnyWorld
 {
@@ -31,6 +32,7 @@ namespace BunnyWorld
 			house = "White Walker";
 		}
 
+		// For debugging purposes.
 		public void PrintBunnyData()
 		{
 			Console.WriteLine("Sex: {0}, Color: {1}, Age: {2}, Name: {3}, House: {4}", sex, color, age, name, house);
@@ -86,7 +88,7 @@ namespace BunnyWorld
 					house = "White Walker";
 				}
 
-				Bunny bunny = new Bunny(sex, color, 0, "b" + (i + 1).ToString(), house);
+				Bunny bunny = new Bunny(sex, color, 0, RandomString(10), house); ;
 				bunnies.AddLast(bunny);
 				PrintANewbornBunny(bunny);
 			}
@@ -158,7 +160,7 @@ namespace BunnyWorld
 							house = "White Walker";
 						}
 
-						newbornBunnies.AddLast(new Bunny(sex, color, 0, "b" + (bunnies.Count + newbornBunnies.Count + 1).ToString(), house));
+						newbornBunnies.AddLast(new Bunny(sex, color, 0, RandomString(10), house));
 					}
 				}
 			}
@@ -179,7 +181,7 @@ namespace BunnyWorld
 				LongHardWinter(bunnies);
 			}
 
-			PrintBunnies(bunnies);
+			// Use when debugging. PrintBunnies(bunnies); 
 			Console.WriteLine("Press any key for next turn. Press ESC to stop.");
 		}
 
@@ -316,7 +318,15 @@ namespace BunnyWorld
 				Console.WriteLine("White Walker {0} died at age {1}!", bunny.name, bunny.age);
 		}
 
-		// Print the entire bunnies list.
+		// Generate a random string. (For a distinct bunny name).
+		public static string RandomString(int length)
+		{
+			const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+			return new string(Enumerable.Repeat(chars, length)
+			  .Select(s => s[new Random().Next(s.Length)]).ToArray());
+		}
+
+		// Print the entire bunnies list. For debugging purposes.
 		private static void PrintBunnies(LinkedList<Bunny> bunnies)
 		{
 			foreach (Bunny bunny in bunnies)
