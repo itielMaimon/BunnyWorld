@@ -2,6 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 
+/*
+========================================================================
+BunnyWorld - 
+ * A fun game of good Noble houses bunnies and bad White Walker bunnies.
+ * The bunnies can breed, have children and die.
+ * Play the game and see how the bunny population thrives.
+========================================================================
+ */
+
 namespace AdvancedBunnyWorld
 {
 	// The bunny object class.
@@ -22,6 +31,7 @@ namespace AdvancedBunnyWorld
 			this.house = house;
 		}
 
+		// Turn a Noble bunny into a White Walker.
 		public void TurnToWhite()
 		{
 			if (sex == "Male")
@@ -33,11 +43,12 @@ namespace AdvancedBunnyWorld
 		}
 	}
 
+	// The main program class.
 	class Program
 	{
 		const int GridSize = 50;
 
-		enum Colors
+		enum Color
 		{
 			White,
 			Brown,
@@ -47,7 +58,7 @@ namespace AdvancedBunnyWorld
 			Silver
 		};
 
-		enum Houses
+		enum House
 		{
 			Stark,
 			Baratheon,
@@ -76,8 +87,8 @@ namespace AdvancedBunnyWorld
 				/// 2% chance the bunny will be a white walker.
 				if (new Random().NextDouble() < 0.98)
 				{
-					color = Enum.GetName(typeof(Colors), new Random().Next(6));
-					house = Enum.GetName(typeof(Houses), new Random().Next(4));
+					color = Enum.GetName(typeof(Color), new Random().Next(6));
+					house = Enum.GetName(typeof(House), new Random().Next(4));
 				}
 				else
 				{
@@ -106,20 +117,7 @@ namespace AdvancedBunnyWorld
 			};
 		}
 
-		// Place a bunny on the grid in a random empty space.
-		private static void PlaceBunnyOnGrid(Bunny[,] bunniesGrid, Bunny bunny)
-		{
-			int radomBunnyX = new Random().Next(GridSize);
-			int radomBunnyY = new Random().Next(GridSize);
-			
-			while (bunniesGrid[radomBunnyX, radomBunnyY] != null)
-			{
-				radomBunnyX = new Random().Next(GridSize);
-				radomBunnyY = new Random().Next(GridSize);
-			}
-			
-			bunniesGrid[radomBunnyX, radomBunnyY] = bunny;
-		}
+		#region Gameplay Handling
 
 		// Performing a turn and making modifications.
 		private static void NextTurn(LinkedList<Bunny> bunnies)
@@ -201,6 +199,159 @@ namespace AdvancedBunnyWorld
 			Console.WriteLine("Press any key for next turn. Press ESC to stop.");
 		}
 
+		// Finding a random adult male bunny for mating.
+		private static Bunny FindAnAdultMale(LinkedList<Bunny> bunnies)
+		{
+			// Creating a list of all the adult males bunnies.
+			LinkedList<Bunny> adultMaleBunnies = new LinkedList<Bunny>();
+
+			foreach (Bunny bunny in bunnies)
+			{
+				if (bunny.house != "White Walker" && bunny.sex == "Male" && bunny.age >= 2)
+					adultMaleBunnies.AddLast(bunny);
+			}
+
+			// Return a random adult male bunny.
+			return GetARandomBunny(adultMaleBunnies);
+		}
+
+		// Get a random bunny from a list of bunnies.
+		private static Bunny GetARandomBunny(LinkedList<Bunny> bunnies)
+		{
+			// Creating a random index to get a randomized bunny.
+			int selectedBunnyIndex = new Random().Next(bunnies.Count);
+			foreach (Bunny bunny in bunnies)
+			{
+				if (selectedBunnyIndex == 0)
+					return bunny;
+				// Downgrading the index until we find the randomized bunny.
+				selectedBunnyIndex--;
+			}
+			return null;
+		}
+
+		// Turn Noble bunnies into White Walkers bunnies.
+		private static void WhiteWalkerInfection(LinkedList<Bunny> bunnies)
+		{
+			// We need to exclude all the White Walker bunnies from the Noble bunnies.
+			LinkedList<Bunny> nobleBunnies = new LinkedList<Bunny>();
+			int whiteWalkersCount = 0;
+
+			foreach (Bunny bunny in bunnies)
+			{
+				if (bunny.house != "White Walker")
+					nobleBunnies.AddLast(bunny);
+				else
+					whiteWalkersCount++;
+			}
+
+			/* Continue for as long as there are more existing Noble bunnies to infect.
+			 * Stop when we infect all the needed Noble bunnies, or when we run out of Noble bunnies.
+			 */
+			while (whiteWalkersCount > 0 && nobleBunnies.Count > 0)
+			{
+				Bunny randomNobleBunny = GetARandomBunny(nobleBunnies);
+				if (randomNobleBunny != null)
+				{
+					randomNobleBunny.TurnToWhite();
+					// Remove this Noble bunny from the list, since now he is a White Walker. (Prevents repetition).
+					nobleBunnies.Remove(randomNobleBunny);
+				}
+				// Downgrading the counter until we infect all the needed Noble bunnies.
+				whiteWalkersCount--;
+			}
+		}
+
+		// Kill exactly half the bunnies population randomly.
+		private static void LongHardWinter(LinkedList<Bunny> bunnies)
+		{
+			// Marking the half population count.
+			int halfBunniesPopulation = bunnies.Count / 2;
+
+			// Kill bunnies until we reach the half population count.
+			while (bunnies.Count > halfBunniesPopulation)
+			{
+				Bunny randomBunny = GetARandomBunny(bunnies);
+				if (randomBunny != null)
+				{
+					bunnies.Remove(randomBunny);
+					PrintADeadBunny(randomBunny);
+				}
+			}
+		}
+
+		// Print a message for each newborn bunny.
+		private static void PrintANewbornBunny(Bunny bunny)
+		{
+			if (bunny.house != "White Walker")
+			{
+				if (bunny.sex == "Male")
+					Console.WriteLine("Lord {0} of bunny house {1} of color {2} was born!", bunny.name, bunny.house, bunny.color);
+				else
+					Console.WriteLine("Lady {0} of bunny house {1} of color {2} was born!", bunny.name, bunny.house, bunny.color);
+			}
+			else
+				Console.WriteLine("White Walker bunny {0} was born!", bunny.name);
+		}
+
+		// Print a message for each dead bunny.
+		private static void PrintADeadBunny(Bunny bunny)
+		{
+			if (bunny.house != "White Walker")
+			{
+				string sigil;
+				string saying;
+				switch (bunny.house)
+				{
+					case "Stark":
+						sigil = "Wolf";
+						saying = "Winter Is Coming!";
+						break;
+					case "Baratheon":
+						sigil = "Stag";
+						saying = "Ours Is The Furry!";
+						break;
+					case "Lannister":
+						sigil = "Lion";
+						saying = "Hear Me Roar!";
+						break;
+					case "Targaryen":
+						sigil = "Dragon";
+						saying = "Fire And Blood!";
+						break;
+					default:
+						sigil = "";
+						saying = "";
+						break;
+				}
+				if (bunny.sex == "Male")
+					Console.WriteLine("Lord {0} of bunny house {1} died at age {2}! He was a fierce {3}! {4}", bunny.name, bunny.house, bunny.age, sigil, saying);
+				else
+					Console.WriteLine("Lady {0} of bunny house {1} died at age {2}! She was a fierce {3}! {4}", bunny.name, bunny.house, bunny.age, sigil, saying);
+			}
+			else
+				Console.WriteLine("White Walker {0} died at age {1}!", bunny.name, bunny.age);
+		}
+
+		#endregion
+
+		#region Bunnies Grid Handling
+
+		// Place a bunny on the grid in a random empty space.
+		private static void PlaceBunnyOnGrid(Bunny[,] bunniesGrid, Bunny bunny)
+		{
+			int radomBunnyX = new Random().Next(GridSize);
+			int radomBunnyY = new Random().Next(GridSize);
+
+			while (bunniesGrid[radomBunnyX, radomBunnyY] != null)
+			{
+				radomBunnyX = new Random().Next(GridSize);
+				radomBunnyY = new Random().Next(GridSize);
+			}
+
+			bunniesGrid[radomBunnyX, radomBunnyY] = bunny;
+		}
+
 		// Move the bunnies on the grid to a new random space.
 		private static void MoveBunniesOnGrid(LinkedList<Bunny> bunnies)
 		{
@@ -265,139 +416,8 @@ namespace AdvancedBunnyWorld
 			}
 		}
 
-		// Finding a random adult male bunny for mating.
-		private static Bunny FindAnAdultMale(LinkedList<Bunny> bunnies)
-		{
-			// Creating a list of all the adult males bunnies.
-			LinkedList<Bunny> adultMaleBunnies = new LinkedList<Bunny>();
-
-			foreach (Bunny bunny in bunnies)
-			{
-				if (bunny.house != "White Walker" && bunny.sex == "Male" && bunny.age >= 2)
-					adultMaleBunnies.AddLast(bunny);
-			}
-
-			// Return a random adult male bunny.
-			return GetARandomBunny(adultMaleBunnies);
-		}
-
-		// Turn Noble bunnies into White Walkers bunnies.
-		private static void WhiteWalkerInfection(LinkedList<Bunny> bunnies)
-		{
-			// We need to exclude all the White Walker bunnies from the Noble bunnies.
-			LinkedList<Bunny> nobleBunnies = new LinkedList<Bunny>();
-			int whiteWalkersCount = 0;
-
-			foreach (Bunny bunny in bunnies)
-			{
-				if (bunny.house != "White Walker")
-					nobleBunnies.AddLast(bunny);
-				else
-					whiteWalkersCount++;
-			}
-
-			/* Continue for as long as there are more existing Noble bunnies to infect.
-			 * Stop when we infect all the needed Noble bunnies, or when we run out of Noble bunnies.
-			 */
-			while (whiteWalkersCount > 0 && nobleBunnies.Count > 0)
-			{
-				Bunny randomNobleBunny = GetARandomBunny(nobleBunnies);
-				if (randomNobleBunny != null)
-				{
-					randomNobleBunny.TurnToWhite();
-					// Remove this Noble bunny from the list, since now he is a White Walker. (Prevents repetition).
-					nobleBunnies.Remove(randomNobleBunny);
-				}
-				// Downgrading the counter until we infect all the needed Noble bunnies.
-				whiteWalkersCount--;
-			}
-		}
-
-		// Kill exactly half the bunnies population randomly.
-		private static void LongHardWinter(LinkedList<Bunny> bunnies)
-		{
-			// Marking the half population count.
-			int halfBunniesPopulation = bunnies.Count / 2;
-
-			// Kill bunnies until we reach the half population count.
-			while (bunnies.Count > halfBunniesPopulation)
-			{
-				Bunny randomBunny = GetARandomBunny(bunnies);
-				if (randomBunny != null)
-				{
-					bunnies.Remove(randomBunny);
-					PrintADeadBunny(randomBunny);
-				}
-			}
-		}
-
-		private static Bunny GetARandomBunny(LinkedList<Bunny> bunnies)
-		{
-			// Creating a random index to get a randomized bunny.
-			int selectedBunnyIndex = new Random().Next(bunnies.Count);
-			foreach (Bunny bunny in bunnies)
-			{
-				if (selectedBunnyIndex == 0)
-					return bunny;
-				// Downgrading the index until we find the randomized bunny.
-				selectedBunnyIndex--;
-			}
-			return null;
-		}
-
-		// Print a message for each newborn bunny.
-		private static void PrintANewbornBunny(Bunny bunny)
-		{
-			if (bunny.house != "White Walker")
-			{
-				if (bunny.sex == "Male")
-					Console.WriteLine("Lord {0} of bunny house {1} of color {2} was born!", bunny.name, bunny.house, bunny.color);
-				else
-					Console.WriteLine("Lady {0} of bunny house {1} of color {2} was born!", bunny.name, bunny.house, bunny.color);
-			}
-			else
-				Console.WriteLine("White Walker bunny {0} was born!", bunny.name);
-		}
-
-		// Print a message for each dead bunny.
-		private static void PrintADeadBunny(Bunny bunny)
-		{
-			if (bunny.house != "White Walker")
-			{
-				string sigil;
-				string saying;
-				switch (bunny.house)
-				{
-					case "Stark":
-						sigil = "Wolf";
-						saying = "Winter Is Coming!";
-						break;
-					case "Baratheon":
-						sigil = "Stag";
-						saying = "Ours Is The Furry!";
-						break;
-					case "Lannister":
-						sigil = "Lion";
-						saying = "Hear Me Roar!";
-						break;
-					case "Targaryen":
-						sigil = "Dragon";
-						saying = "Fire And Blood!";
-						break;
-					default:
-						sigil = "";
-						saying = "";
-						break;
-				}
-				if (bunny.sex == "Male")
-					Console.WriteLine("Lord {0} of bunny house {1} died at age {2}! He was a fierce {3}! {4}", bunny.name, bunny.house, bunny.age, sigil, saying);
-				else
-					Console.WriteLine("Lady {0} of bunny house {1} died at age {2}! She was a fierce {3}! {4}", bunny.name, bunny.house, bunny.age, sigil, saying);
-			}
-			else
-				Console.WriteLine("White Walker {0} died at age {1}!", bunny.name, bunny.age);
-		}
-
+        #endregion
+        
 		// Generate a random string. (For a distinct bunny name).
 		public static string RandomString(int length)
 		{
