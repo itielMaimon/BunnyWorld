@@ -46,7 +46,7 @@ namespace AdvancedBunnyWorld
 	// The main program class.
 	class Program
 	{
-		const int GridSize = 50;
+		const int GridSize = 75;
 
 		enum Color
 		{
@@ -185,17 +185,24 @@ namespace AdvancedBunnyWorld
 				PrintANewbornBunny(newBornBunny);
 			}
 
-			// Start the infection of the White Walker bunnies. (Infection includes newborn bunnies).
-			WhiteWalkerInfection(bunnies);
-
 			if (bunnies.Count > 1000)
 			{
 				// Kill half the population randomly.
 				LongHardWinter(bunnies);
 			}
 
-			// Move the bunnies one space each turn randomly. (And print the new grid).
-			MoveBunniesOnGrid(bunnies);
+			// Move the bunnies one space each turn randomly.
+			Bunny[,] bunniesGrid = MoveBunniesOnGrid(bunnies);
+
+			/* Start the infection of the White Walker bunnies. (Infection includes newborn bunnies).
+			 * Infection starts only after the bunnies moved to their new space.
+			 * Infection does not include new infected bunnies that turned into White Walkers bunnies this turn,
+			 * i.e. a Noble bunny that got infected and turned into a White Walker bunny this turn, will only infect bunnies at the next turn.
+			 */
+			WhiteWalkerInfection(bunniesGrid);
+
+			// Print the new grid.
+			PrintBunniesGrid(bunniesGrid);
 			Console.WriteLine("Press any key for next turn. Press ESC to stop.");
 		}
 
@@ -231,35 +238,96 @@ namespace AdvancedBunnyWorld
 		}
 
 		// Turn Noble bunnies into White Walkers bunnies.
-		private static void WhiteWalkerInfection(LinkedList<Bunny> bunnies)
+		private static void WhiteWalkerInfection(Bunny[,] bunniesGrid)
 		{
-			// We need to exclude all the White Walker bunnies from the Noble bunnies.
-			LinkedList<Bunny> nobleBunnies = new LinkedList<Bunny>();
-			int whiteWalkersCount = 0;
-
-			foreach (Bunny bunny in bunnies)
-			{
-				if (bunny.house != "White Walker")
-					nobleBunnies.AddLast(bunny);
-				else
-					whiteWalkersCount++;
-			}
-
-			/* Continue for as long as there are more existing Noble bunnies to infect.
-			 * Stop when we infect all the needed Noble bunnies, or when we run out of Noble bunnies.
+			/* We first creating a list of selected bunnies and only after we go over the entire grid we turn them into White Walker bunnies.
+			 * This is done in order to prevent a new infected bunny that turned into a White Walker bunny to infect more bunnies in its surronding.
+			 * New White Walker bunnies will only infect other bunnies at the next turn.
 			 */
-			while (whiteWalkersCount > 0 && nobleBunnies.Count > 0)
+			LinkedList<Bunny> infectedNobleBunnies = new LinkedList<Bunny>();
+
+			// Go over the entire grid of bunnies to find the White Walker bunnies.
+			for (int x = 0; x < bunniesGrid.GetLength(0); x++)
 			{
-				Bunny randomNobleBunny = GetARandomBunny(nobleBunnies);
-				if (randomNobleBunny != null)
+				for (int y = 0; y < bunniesGrid.GetLength(1); y++)
 				{
-					randomNobleBunny.TurnToWhite();
-					// Remove this Noble bunny from the list, since now he is a White Walker. (Prevents repetition).
-					nobleBunnies.Remove(randomNobleBunny);
+					if (bunniesGrid[x, y] != null && bunniesGrid[x, y].house == "White Walker")
+					{
+						// Search for a Noble bunny in its surrounding and add him into the infected bunnies list.
+						Bunny randomNobleBunnyFromSurrounding = GetANobleBunnyFromSurrounding(x, y, bunniesGrid, infectedNobleBunnies);
+						if (randomNobleBunnyFromSurrounding != null)
+							infectedNobleBunnies.AddLast(randomNobleBunnyFromSurrounding);
+					}
 				}
-				// Downgrading the counter until we infect all the needed Noble bunnies.
-				whiteWalkersCount--;
 			}
+
+			// Turn the infected bunnies into White Walker bunnies only after we went over the entire grid.
+			foreach(Bunny infectedBunny in infectedNobleBunnies)
+			{
+				infectedBunny.TurnToWhite();
+			}
+		}
+
+		// Get a random Noble bunny from surrounding of a White Walker bunny.
+		private static Bunny GetANobleBunnyFromSurrounding(int whiteX, int whiteY, Bunny[,] bunniesGrid, LinkedList<Bunny> infectedNobleBunnies)
+		{
+			// Creating a list of Noble bunnies in surrounding of a White Walker bunny.
+			LinkedList<Bunny> nobleBunnies = new LinkedList<Bunny>();
+
+			// Determining the range for searching, to prevent edge cases (out if index).
+			int minXRange, maxXRange, minYRange, maxYRange;
+
+			// X axis range.
+			if (whiteX == 0)
+			{
+				minXRange = 0;
+				maxXRange = 2;
+
+			}
+			else if (whiteX == bunniesGrid.GetLength(0) - 1)
+			{
+				minXRange = bunniesGrid.GetLength(0) - 2;
+				maxXRange = bunniesGrid.GetLength(0);
+			}
+			else
+			{
+				minXRange = whiteX - 1;
+				maxXRange = whiteX + 2;
+			}
+
+			// Y axis range.
+			if (whiteY == 0)
+			{
+				minYRange = 0;
+				maxYRange = 2;
+
+			}
+			else if (whiteY == bunniesGrid.GetLength(1) - 1)
+			{
+				minYRange = bunniesGrid.GetLength(1) - 2;
+				maxYRange = bunniesGrid.GetLength(1);
+			}
+			else
+			{
+				minYRange = whiteY - 1;
+				maxYRange = whiteY + 2;
+			}
+
+			// Start searching in compliance with range boundaries.
+			for (int x = minXRange; x < maxXRange; x++)
+				for (int y = minYRange; y < maxYRange; y++)
+				{
+					/* Check to prevent empty spaces, White Walker bunnies and already chosen Noble bunnies to be infected.
+					 * (A bunny can be selected by only one White Walker bunny).
+					 */
+					if (bunniesGrid[x, y] != null && bunniesGrid[x, y].house != "White Walker" && !infectedNobleBunnies.Contains(bunniesGrid[x, y]))
+						nobleBunnies.AddLast(bunniesGrid[x, y]);
+				}
+
+			// Get a random Noble bunny from the found Noble bunnies and return it.
+			if (nobleBunnies.Count > 0)
+				return GetARandomBunny(nobleBunnies);
+			return null;
 		}
 
 		// Kill exactly half the bunnies population randomly.
@@ -353,7 +421,7 @@ namespace AdvancedBunnyWorld
 		}
 
 		// Move the bunnies on the grid to a new random space.
-		private static void MoveBunniesOnGrid(LinkedList<Bunny> bunnies)
+		private static Bunny[,] MoveBunniesOnGrid(LinkedList<Bunny> bunnies)
 		{
 			Bunny[,] bunniesGrid = new Bunny[GridSize, GridSize];
 			foreach (Bunny bunny in bunnies)
@@ -363,10 +431,11 @@ namespace AdvancedBunnyWorld
 					PlaceBunnyOnGrid(bunniesGrid, bunny);
 			}
 
-			if (bunnies.Count <= GridSize * GridSize)
-				PrintBunniesGrid(bunniesGrid);
-			else
+			// In case the number of bunnies is greater than the number of cells in the grid.
+			if (bunnies.Count > GridSize * GridSize)
 				Console.WriteLine("Not enough space on the grid!");
+			
+			return bunniesGrid;
 		}
 
 		// Print the grid of bunnies.
