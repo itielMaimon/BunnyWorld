@@ -43,7 +43,7 @@ namespace AdvancedBunnyWorld
 		}
 	}
 
-	// Used for finding a randomized spaces for new born bunnies.
+	// Space object used for representing and finding randomized spaces for new born bunnies.
 	class Space
 	{
 		public int x;
