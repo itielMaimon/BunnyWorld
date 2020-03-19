@@ -318,7 +318,7 @@ namespace AdvancedBunnyWorld
 				for (int y = minYRange; y < maxYRange; y++)
 				{
 					/* Check to prevent empty spaces, White Walker bunnies and already chosen Noble bunnies to be infected.
-					 * (A bunny can be selected by only one White Walker bunny).
+					 * (A Noble bunny can be selected for infection by only one White Walker bunny).
 					 */
 					if (bunniesGrid[x, y] != null && bunniesGrid[x, y].house != "White Walker" && !infectedNobleBunnies.Contains(bunniesGrid[x, y]))
 						nobleBunnies.AddLast(bunniesGrid[x, y]);
@@ -447,34 +447,26 @@ namespace AdvancedBunnyWorld
 				{
 					if (bunniesGrid[x, y] != null)
 					{
+						ChangeConsoleColor(bunniesGrid[x, y].color);
 						switch (bunniesGrid[x, y].house)
 						{
 							case "Stark":
-								Console.ForegroundColor = ConsoleColor.Red;
 								Console.Write((bunniesGrid[x, y].age >= 2) ? "S " : "s ");
-								Console.ResetColor();
 								break;
 							case "Baratheon":
-								Console.ForegroundColor = ConsoleColor.Green;
 								Console.Write((bunniesGrid[x, y].age >= 2) ? "B " : "b ");
-								Console.ResetColor();
 								break;
 							case "Lannister":
-								Console.ForegroundColor = ConsoleColor.Yellow;
 								Console.Write((bunniesGrid[x, y].age >= 2) ? "L " : "l ");
-								Console.ResetColor();
 								break;
 							case "Targaryen":
-								Console.ForegroundColor = ConsoleColor.Cyan;
 								Console.Write((bunniesGrid[x, y].age >= 2) ? "T " : "t ");
-								Console.ResetColor();
 								break;
 							case "White Walker":
-								Console.ForegroundColor = ConsoleColor.White;
 								Console.Write("W ");
-								Console.ResetColor();
 								break;
 						}
+						Console.ResetColor();
 					}
 					else
 					{
@@ -483,6 +475,20 @@ namespace AdvancedBunnyWorld
 				}
 				Console.WriteLine();
 			}
+		}
+
+		private static void ChangeConsoleColor(string color)
+		{
+			Console.ForegroundColor = color switch
+			{
+				"White" => ConsoleColor.White,
+				"Brown" => ConsoleColor.Red,
+				"Grey" => ConsoleColor.Magenta,
+				"Black" => ConsoleColor.DarkGray,
+				"Gold" => ConsoleColor.Yellow,
+				"Silver" => ConsoleColor.Cyan,
+				_ => ConsoleColor.White,
+			};
 		}
 
         #endregion
