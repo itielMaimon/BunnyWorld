@@ -43,9 +43,23 @@ namespace AdvancedBunnyWorld
 		}
 	}
 
+	// Used for finding a randomized spaces for new born bunnies.
+	class Space
+	{
+		public int x;
+		public int y;
+
+		public Space(int x, int y)
+		{
+			this.x = x;
+			this.y = y;
+		}
+	}
+
 	// The main program class.
 	class Program
 	{
+		// Control grid size.
 		const int GridSize = 75;
 
 		enum Color
@@ -122,77 +136,48 @@ namespace AdvancedBunnyWorld
 		// Performing a turn and making modifications.
 		private static void NextTurn(LinkedList<Bunny> bunnies)
 		{
-			LinkedList<Bunny> deadBunnies = new LinkedList<Bunny>();
-			LinkedList<Bunny> newbornBunnies = new LinkedList<Bunny>();
-
-			foreach (Bunny bunny in bunnies)
-			{
-				bunny.age++;
-
-				/* A bunny dies when he becomes older than 10 years old.
-				 * A White Walker bunny dies when he becomes 50 years old.
-				 */
-				if ((bunny.house != "White Walker" && bunny.age > 10) || (bunny.house == "White Walker" && bunny.age >= 50))
-					deadBunnies.AddLast(bunny);
-			}
-
-			// Removing the dead bunnies from the list (needs to happen before breeding, to prevent a dead father).
-			foreach (Bunny deadBunny in deadBunnies)
-			{
-				bunnies.Remove(deadBunny);
-				PrintADeadBunny(deadBunny);
-			}
-
-			// Creating another foreach loop, because we need to age all the bunnies before we start the breeding.
-			foreach (Bunny bunny in bunnies)
-			{
-				// Mating a female bunny with a male bunny.
-				if (bunny.house != "White Walker" && bunny.sex == "Female" && bunny.age >= 2)
-				{
-					Bunny adultMaleBunny = FindAnAdultMale(bunnies);
-					if (adultMaleBunny != null)
-					{
-						// Create a new baby bunny.
-						string sex;
-						if (new Random().NextDouble() < 0.5)
-							sex = "Male";
-						else
-							sex = "Female";
-
-						string color;
-						string house;
-						/// 2% chance the bunny will be a white walker.
-						if (new Random().NextDouble() < 0.98)
-						{
-							color = bunny.color;
-							house = adultMaleBunny.house;
-						}
-						else
-						{
-							color = "White";
-							house = "White Walker";
-						}
-
-						newbornBunnies.AddLast(new Bunny(sex, color, 0, RandomString(10), house));
-					}
-				}
-			}
-
-			// Adding the newborn bunnies to the list.
-			foreach (Bunny newBornBunny in newbornBunnies)
-			{
-				bunnies.AddLast(newBornBunny);
-				PrintANewbornBunny(newBornBunny);
-			}
-
+			// If bunny population exceeds 1000 kill half the population randomly.
 			if (bunnies.Count > 1000)
-			{
-				// Kill half the population randomly.
 				LongHardWinter(bunnies);
-			}
 
 			// Move the bunnies one space each turn randomly.
 			Bunny[,] bunniesGrid = MoveBunniesOnGrid(bunnies);
+
+			/* Go over the entire grid of bunnies and make changes.
+			 * We go over the grid and not the linked list, because we need to keep track of mother bunny index.
+			 */
+			for (int x = 0; x < bunniesGrid.GetLength(0); x++)
+			{
+				for(int y = 0; y < bunniesGrid.GetLength(1); y++)
+				{
+					Bunny bunny = bunniesGrid[x, y];
+
+					if (bunny != null)
+					{
+						bunny.age++;
+
+						/* A bunny dies when he becomes older than 10 years old.
+						 * A White Walker bunny dies when he becomes 50 years old.
+						 */
+						if ((bunny.house != "White Walker" && bunny.age > 10) || (bunny.house == "White Walker" && bunny.age >= 50))
+						{
+							bunniesGrid[x, y] = null;
+							bunnies.Remove(bunny);
+							PrintADeadBunny(bunny);
+						}
+						// Mating a female bunny with a male bunny.
+						else if (bunny.house != "White Walker" && bunny.sex == "Female" && bunny.age >= 2)
+						{
+							Bunny adultMaleBunny = FindAnAdultMale(bunnies);
+							if (adultMaleBunny != null)
+							{
+								// Create a new baby bunny.
+								CreateABabyBunny(x, y, bunniesGrid, adultMaleBunny, bunnies);
+							}
+						}
+					}
+				}
+			}
 
 			/* Start the infection of the White Walker bunnies. (Infection includes newborn bunnies).
 			 * Infection starts only after the bunnies moved to their new space.
@@ -233,6 +218,105 @@ namespace AdvancedBunnyWorld
 					return bunny;
 				// Downgrading the index until we find the randomized bunny.
 				selectedBunnyIndex--;
+			}
+			return null;
+		}
+
+		// Create a new baby bunny.
+		private static void CreateABabyBunny(int motherX, int motherY, Bunny[,] bunniesGrid, Bunny fatherBunny, LinkedList<Bunny> bunnies)
+		{
+			Space emptySpace = GetAnEmptySpaceFromSurrounding(motherX, motherY, bunniesGrid);
+			if(emptySpace != null)
+			{
+				string sex;
+				if (new Random().NextDouble() < 0.5)
+					sex = "Male";
+				else
+					sex = "Female";
+
+				string color;
+				string house;
+				/// 2% chance the bunny will be a white walker.
+				if (new Random().NextDouble() < 0.98)
+				{
+					color = bunniesGrid[motherX, motherY].color;
+					house = fatherBunny.house;
+				}
+				else
+				{
+					color = "White";
+					house = "White Walker";
+				}
+				Bunny babyBunny = new Bunny(sex, color, 0, RandomString(10), house);
+				bunniesGrid[emptySpace.x, emptySpace.y] = babyBunny;
+				bunnies.AddLast(babyBunny);
+				PrintANewbornBunny(babyBunny);
+			}
+		}
+
+		// Get a random empty space from surrounding of a mother bunny for a new baby bunny.
+		private static Space GetAnEmptySpaceFromSurrounding(int motherX, int motherY, Bunny[,] bunniesGrid)
+		{
+			// Creating a list of empty spaces in surrounding of a mother bunny.
+			LinkedList<Space> emptySpaces = new LinkedList<Space>();
+
+			// Determining the range for searching, to prevent edge cases (out if index).
+			int minXRange, maxXRange, minYRange, maxYRange;
+
+			// X axis range.
+			if (motherX == 0)
+			{
+				minXRange = 0;
+				maxXRange = 2;
+
+			}
+			else if (motherX == bunniesGrid.GetLength(0) - 1)
+			{
+				minXRange = bunniesGrid.GetLength(0) - 2;
+				maxXRange = bunniesGrid.GetLength(0);
+			}
+			else
+			{
+				minXRange = motherX - 1;
+				maxXRange = motherX + 2;
+			}
+
+			// Y axis range.
+			if (motherY == 0)
+			{
+				minYRange = 0;
+				maxYRange = 2;
+
+			}
+			else if (motherY == bunniesGrid.GetLength(1) - 1)
+			{
+				minYRange = bunniesGrid.GetLength(1) - 2;
+				maxYRange = bunniesGrid.GetLength(1);
+			}
+			else
+			{
+				minYRange = motherY - 1;
+				maxYRange = motherY + 2;
+			}
+
+			// Start searching for empty spaces in compliance with range boundaries.
+			for (int x = minXRange; x < maxXRange; x++)
+				for (int y = minYRange; y < maxYRange; y++)
+					if (bunniesGrid[x, y] == null)
+						emptySpaces.AddLast(new Space(x, y));
+				
+			// Get a random empty space from the found empty spaces and return it.
+			if (emptySpaces.Count > 0)
+			{
+				// Creating a random index to get a randomized space.
+				int selectedSpaceIndex = new Random().Next(emptySpaces.Count);
+				foreach (Space emptySpace in emptySpaces)
+				{
+					if (selectedSpaceIndex == 0)
+						return emptySpace;
+					// Downgrading the index until we find the randomized space.
+					selectedSpaceIndex--;
+				}
 			}
 			return null;
 		}
@@ -313,7 +397,7 @@ namespace AdvancedBunnyWorld
 				maxYRange = whiteY + 2;
 			}
 
-			// Start searching in compliance with range boundaries.
+			// Start searching for noble bunnies in compliance with range boundaries.
 			for (int x = minXRange; x < maxXRange; x++)
 				for (int y = minYRange; y < maxYRange; y++)
 				{
@@ -477,6 +561,9 @@ namespace AdvancedBunnyWorld
 			}
 		}
 
+		#endregion
+		
+		// Change the console output color.
 		private static void ChangeConsoleColor(string color)
 		{
 			Console.ForegroundColor = color switch
@@ -491,8 +578,6 @@ namespace AdvancedBunnyWorld
 			};
 		}
 
-        #endregion
-        
 		// Generate a random string. (For a distinct bunny name).
 		public static string RandomString(int length)
 		{
