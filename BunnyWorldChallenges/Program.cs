@@ -87,28 +87,17 @@ namespace AdvancedBunnyWorld
 			LinkedList<Bunny> bunnies = new LinkedList<Bunny>();
 			Bunny[,] bunniesGrid = new Bunny[GridSize, GridSize];
 
-			// Inializing the list, creating 5 bunnies.
-			for (int i = 0; i < 5; i++)
+			// Inializing the list, creating 8 bunnies. One male and one female for each Noble house.
+			for (int i = 0; i < 8; i++)
 			{
 				string sex;
-				if (new Random().NextDouble() < 0.5)
+				if (i % 2 == 0)
 					sex = "Male";
 				else
 					sex = "Female";
 
-				string color;
-				string house;
-				/// 2% chance the bunny will be a white walker.
-				if (new Random().NextDouble() < 0.98)
-				{
-					color = Enum.GetName(typeof(Color), new Random().Next(6));
-					house = Enum.GetName(typeof(House), new Random().Next(4));
-				}
-				else
-				{
-					color = "White";
-					house = "White Walker";
-				}
+				string color = Enum.GetName(typeof(Color), new Random().Next(6));
+				string house = Enum.GetName(typeof(House), i/2);
 
 				Bunny bunny = new Bunny(sex, color, 0, RandomString(10), house); ;
 				bunnies.AddLast(bunny);
@@ -156,9 +145,9 @@ namespace AdvancedBunnyWorld
 				bunnies.Remove(deadBunny);
 				PrintADeadBunny(deadBunny);
 			}
-			
-			// If the bunny population exceeds 1000, kill half the population randomly.
-			if (bunnies.Count > 1000)
+
+			// If the bunny population exceeds 90% of the maximum number of possible bunnies, kill half the population randomly.
+			if (bunnies.Count > 0.9 * GridSize * GridSize)
 				LongHardWinter(bunnies);
 
 			// Move the bunnies one space each turn randomly.
@@ -169,7 +158,7 @@ namespace AdvancedBunnyWorld
 			 */
 			for (int x = 0; x < bunniesGrid.GetLength(0); x++)
 			{
-				for(int y = 0; y < bunniesGrid.GetLength(1); y++)
+				for (int y = 0; y < bunniesGrid.GetLength(1); y++)
 				{
 					Bunny bunny = bunniesGrid[x, y];
 
@@ -178,7 +167,7 @@ namespace AdvancedBunnyWorld
 						// Mating a female bunny with a male bunny.
 						if (bunny.house != "White Walker" && bunny.sex == "Female" && bunny.age >= 2)
 						{
-							Bunny adultMaleBunny = FindAnAdultMale(bunnies);
+							Bunny adultMaleBunny = FindAnAdultMale(bunnies, bunny.house);
 							if (adultMaleBunny != null)
 							{
 								// Create a new baby bunny.
@@ -201,16 +190,18 @@ namespace AdvancedBunnyWorld
 			Console.WriteLine("Press any key for next turn. Press ESC to stop.");
 		}
 
-		// Finding a random adult male bunny for mating.
-		private static Bunny FindAnAdultMale(LinkedList<Bunny> bunnies)
+		// Finding a random adult male bunny from a specific Noble house for mating.
+		private static Bunny FindAnAdultMale(LinkedList<Bunny> bunnies, string house)
 		{
 			// Creating a list of all the adult males bunnies.
 			LinkedList<Bunny> adultMaleBunnies = new LinkedList<Bunny>();
 
 			foreach (Bunny bunny in bunnies)
 			{
-				if (bunny.house != "White Walker" && bunny.sex == "Male" && bunny.age >= 2)
+				if (bunny.house == house && bunny.sex == "Male" && bunny.age >= 2)
+				{
 					adultMaleBunnies.AddLast(bunny);
+				}
 			}
 
 			// Return a random adult male bunny.
@@ -236,7 +227,7 @@ namespace AdvancedBunnyWorld
 		private static void CreateABabyBunny(int motherX, int motherY, Bunny[,] bunniesGrid, Bunny fatherBunny, LinkedList<Bunny> bunnies)
 		{
 			Space emptySpace = GetAnEmptySpaceFromSurrounding(motherX, motherY, bunniesGrid);
-			if(emptySpace != null)
+			if (emptySpace != null)
 			{
 				string sex;
 				if (new Random().NextDouble() < 0.5)
@@ -314,7 +305,7 @@ namespace AdvancedBunnyWorld
 				for (int y = minYRange; y < maxYRange; y++)
 					if (bunniesGrid[x, y] == null)
 						emptySpaces.AddLast(new Space(x, y));
-				
+
 			// Get a random empty space from the found empty spaces and return it.
 			if (emptySpaces.Count > 0)
 			{
@@ -356,7 +347,7 @@ namespace AdvancedBunnyWorld
 			}
 
 			// Turn the infected bunnies into White Walker bunnies only after we went over the entire grid.
-			foreach(Bunny infectedBunny in infectedNobleBunnies)
+			foreach (Bunny infectedBunny in infectedNobleBunnies)
 			{
 				infectedBunny.TurnToWhite();
 			}
@@ -528,7 +519,7 @@ namespace AdvancedBunnyWorld
 			// In case the number of bunnies is greater than the number of cells in the grid.
 			if (bunnies.Count > GridSize * GridSize)
 				Console.WriteLine("Not enough space on the grid!");
-			
+
 			return bunniesGrid;
 		}
 
@@ -572,7 +563,7 @@ namespace AdvancedBunnyWorld
 		}
 
 		#endregion
-		
+
 		// Change the console output color.
 		private static void ChangeConsoleColor(string color)
 		{
