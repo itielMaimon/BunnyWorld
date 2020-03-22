@@ -98,7 +98,7 @@ namespace AdvancedBunnyWorld
 
 				string color;
 				string house;
-				/// 2% chance the bunny will be a white walker.
+				// 2% chance the bunny will be a white walker.
 				if (new Random().NextDouble() < 0.98)
 				{
 					color = Enum.GetName(typeof(Color), new Random().Next(6));
@@ -246,7 +246,7 @@ namespace AdvancedBunnyWorld
 
 				string color;
 				string house;
-				/// 2% chance the bunny will be a white walker.
+				// 2% chance the bunny will be a white walker.
 				if (new Random().NextDouble() < 0.98)
 				{
 					color = bunniesGrid[motherX, motherY].color;
