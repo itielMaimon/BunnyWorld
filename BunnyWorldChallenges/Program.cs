@@ -86,10 +86,23 @@ namespace BunnyWorldChallenges
 			Targaryen
 		};
 
+		private static int dragonX;
+		private static int dragonY;
+		private static int dragonDirection;
+
 		static void Main(string[] args)
 		{
 			LinkedList<Bunny> bunnies = new LinkedList<Bunny>();
 			Bunny[,] bunniesGrid = new Bunny[GridSize, GridSize];
+
+			// Place a dragon on the grid. (Using the Bunny class).
+			dragonX = new Random().Next(GridSize);
+			dragonY = dragonX;
+			dragonDirection = 0;
+
+			Bunny dragon = new Bunny("Male", "Red", 0, RandomString(10), "Dragon");
+			bunnies.AddLast(dragon);
+			bunniesGrid[dragonX, dragonY] = dragon;
 
 			// Inializing the list, creating 8 bunnies. One male and one female for each Noble house.
 			for (int i = 0; i < 8; i++)
@@ -118,7 +131,7 @@ namespace BunnyWorldChallenges
 			{
 				while (bunnies.Count > 0)
 				{
-					NextTurn(bunnies);
+					NextTurn(bunnies, bunniesGrid);
 				};
 			}
 			else
@@ -128,7 +141,7 @@ namespace BunnyWorldChallenges
 				{
 					if (!Console.KeyAvailable)
 					{
-						NextTurn(bunnies);
+						NextTurn(bunnies, bunniesGrid);
 					}
 				};
 			}
@@ -137,7 +150,7 @@ namespace BunnyWorldChallenges
 		#region Gameplay Handling
 
 		// Performing a turn and making modifications.
-		private static void NextTurn(LinkedList<Bunny> bunnies)
+		private static void NextTurn(LinkedList<Bunny> bunnies, Bunny[,] bunniesGrid)
 		{
 			LinkedList<Bunny> deadBunnies = new LinkedList<Bunny>();
 
@@ -149,7 +162,7 @@ namespace BunnyWorldChallenges
 				/* A bunny dies when he becomes older than 10 years old.
 				 * A White Walker bunny dies when he becomes 50 years old.
 				 */
-				if ((bunny.house != "White Walker" && bunny.age > 10) || (bunny.house == "White Walker" && bunny.age >= 50))
+				if (bunny.house != "Dragon" && ((bunny.house != "White Walker" && bunny.age > 10) || (bunny.house == "White Walker" && bunny.age >= 50)))
 					deadBunnies.AddLast(bunny);
 			}
 
@@ -165,7 +178,7 @@ namespace BunnyWorldChallenges
 				LongHardWinter(bunnies);
 
 			// Move the bunnies one space each turn randomly.
-			Bunny[,] bunniesGrid = MoveBunniesOnGrid(bunnies);
+			 MoveBunniesOnGrid(bunnies, bunniesGrid);
 
 			/* Go over the entire grid of bunnies and make changes.
 			 * We go over the grid and not the linked list, because we need to keep track of mother bunny index.
@@ -179,7 +192,7 @@ namespace BunnyWorldChallenges
 					if (bunny != null)
 					{
 						// Mating a female bunny with a male bunny.
-						if (bunny.house != "White Walker" && bunny.sex == "Female" && bunny.age >= 2)
+						if (bunny.house != "Dragon" && bunny.house != "White Walker" && bunny.sex == "Female" && bunny.age >= 2)
 						{
 							Bunny adultMaleBunny = FindAnAdultMale(bunnies, bunny.house);
 							if (adultMaleBunny != null)
@@ -202,7 +215,7 @@ namespace BunnyWorldChallenges
 					if (bunny != null)
 					{
 						// Start an attack.
-						if (bunny.house != "White Walker" && bunny.sex == "Male" && bunny.age >= 2)
+						if (bunny.house != "Dragon" && bunny.house != "White Walker" && bunny.sex == "Male" && bunny.age >= 2)
 						{
 							AttackBunnies(bunny, x, y, bunniesGrid, bunnies);
 						}
@@ -357,11 +370,11 @@ namespace BunnyWorldChallenges
 		{
 			// Get a space of a surrounding bunny to attack.
 			Space victimBunnySpace = GetASpaceFromSurrounding(attackerX, attackerY, bunniesGrid, false);
-			if(victimBunnySpace != null)
+			if (victimBunnySpace != null)
 			{
 				Bunny victimBunny = bunniesGrid[victimBunnySpace.x, victimBunnySpace.y];
-				// Do something only if they're not from the same house.
-				if (victimBunny.house != attackerBunny.house)
+				// Do something only if they're not from the same house. (Skip if victim is a dragon).
+				if (victimBunny.house != attackerBunny.house && victimBunny.house != "Dragon")
 				{
 					if(victimBunny.house == "White Walker")
 					{
@@ -473,7 +486,7 @@ namespace BunnyWorldChallenges
 			while (bunnies.Count > halfBunniesPopulation)
 			{
 				Bunny randomBunny = GetARandomBunny(bunnies);
-				if (randomBunny != null)
+				if (randomBunny != null && randomBunny.house != "Dragon")
 				{
 					bunnies.Remove(randomBunny);
 					PrintADeadBunny(randomBunny);
@@ -560,21 +573,63 @@ namespace BunnyWorldChallenges
 		}
 
 		// Move the bunnies on the grid to a new random space.
-		private static Bunny[,] MoveBunniesOnGrid(LinkedList<Bunny> bunnies)
+		private static void MoveBunniesOnGrid(LinkedList<Bunny> bunnies, Bunny[,] bunniesGrid)
 		{
-			Bunny[,] bunniesGrid = new Bunny[GridSize, GridSize];
+			MoveDragonOnGrid(bunniesGrid);
 			foreach (Bunny bunny in bunnies)
 			{
 				// Check if there is enough space on the grid before we place another bunny.
-				if (bunnies.Count <= GridSize * GridSize)
+				if (bunny.house != "Dragon" && bunnies.Count <= GridSize * GridSize)
 					PlaceBunnyOnGrid(bunniesGrid, bunny);
 			}
 
 			// In case the number of bunnies is greater than the number of cells in the grid.
 			if (bunnies.Count > GridSize * GridSize)
 				Console.WriteLine("Not enough space on the grid!");
+		}
 
-			return bunniesGrid;
+		// Move the dragon in a unique pattern on the grid.
+		private static void MoveDragonOnGrid(Bunny[,] bunniesGrid)
+		{
+			Bunny dragon = bunniesGrid[dragonX, dragonY];
+			Array.Clear(bunniesGrid, 0, bunniesGrid.Length);
+
+			switch (dragonX)
+			{
+				case 0 when dragonY == 0:
+					dragonDirection = 0;
+					break;
+				case GridSize - 1 when dragonY == GridSize - 1:
+					dragonDirection = 1;
+					break;
+				case 0 when dragonY == GridSize - 1:
+					dragonDirection = 2;
+					break;
+				case GridSize - 1 when dragonY == 0:
+					dragonDirection = 3;
+					break;
+			}
+
+
+			switch (dragonDirection)
+			{
+				case 0:
+					dragonX++;
+					dragonY++;
+					break;
+				case 1:
+					dragonX--;
+					break;
+				case 2:
+					dragonX++;
+					dragonY--;
+					break;
+				case 3:
+					dragonX--;
+					break;
+			}
+
+			bunniesGrid[dragonX, dragonY] = dragon;
 		}
 
 		// Print the grid of bunnies.
@@ -606,6 +661,9 @@ namespace BunnyWorldChallenges
 							case "White Walker":
 								Console.Write("W ");
 								break;
+							case "Dragon":
+								Console.Write("D ");
+								break;
 						}
 						Console.ResetColor();
 					}
@@ -626,11 +684,12 @@ namespace BunnyWorldChallenges
 			Console.ForegroundColor = color switch
 			{
 				"White" => ConsoleColor.White,
-				"Brown" => ConsoleColor.Red,
-				"Grey" => ConsoleColor.Magenta,
+				"Brown" => ConsoleColor.Blue,
+				"Grey" => ConsoleColor.Green,
 				"Black" => ConsoleColor.DarkGray,
 				"Gold" => ConsoleColor.Yellow,
 				"Silver" => ConsoleColor.Cyan,
+				"Red" => ConsoleColor.Red,
 				_ => ConsoleColor.White,
 			};
 		}
