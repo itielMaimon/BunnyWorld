@@ -14,7 +14,7 @@ BunnyWorld -
 namespace BunnyWorldChallenges
 {
 	// The bunny object class.
-	public class Bunny
+	class Bunny
 	{
 		public string sex;
 		public string color;
@@ -29,102 +29,121 @@ namespace BunnyWorldChallenges
 			this.name = name;
 		}
 
-		public virtual string GetHouseName()
+		// Base class functions overridden by each derived class.
+		public virtual string HouseName { get { return ""; } }
+
+		public virtual string Sigil { get { return ""; } }
+
+		public virtual string Saying { get { return ""; } }
+
+		public virtual void PrintOnGrid()
 		{
-			return "Bunny of the world";
+			Console.Write("  ");
 		}
 	}
 
-	public class Stark : Bunny
+	class Stark : Bunny
 	{
-		public string houseName = "Stark";
-		public string sigil = "Wolf";
-		public string saying = "Winter Is Coming!";
+		private readonly string houseName = "Stark";
+		private readonly string sigil = "Wolf";
+		private readonly string saying = "Winter Is Coming!";
 
-		public Stark(string sex, string color, int age, string name) : base( sex,  color,  age,  name)
+		public Stark(string sex, string color, int age, string name) : base( sex,  color,  age, name) { }
+
+		public override string HouseName { get { return houseName; } }
+
+		public override string Sigil { get { return sigil; } }
+
+		public override string Saying { get { return saying; } }
+
+		public override void PrintOnGrid()
 		{
-
-		}
-
-		public override string GetHouseName()
-		{
-			return houseName;
+			Console.Write((age >= 2) ? "S " : "s ");
 		}
 	}
 
-	public class Baratheon : Bunny
+	class Baratheon : Bunny
 	{
-		public string houseName = "Baratheon";
-		public string sigil = "Stag";
-		public string saying = "Ours Is The Furry!";
+		private readonly string houseName = "Baratheon";
+		private readonly string sigil = "Stag";
+		private readonly string saying = "Ours Is The Furry!";
 
-		public Baratheon(string sex, string color, int age, string name) : base(sex, color, age, name)
+		public Baratheon(string sex, string color, int age, string name) : base(sex, color, age, name) { }
+
+		public override string HouseName { get { return houseName; } }
+
+		public override string Sigil { get { return sigil; } }
+
+		public override string Saying { get { return saying; } }
+
+		public override void PrintOnGrid()
 		{
-
-		}
-
-		public override string GetHouseName()
-		{
-			return houseName;
+			Console.Write((age >= 2) ? "B " : "b ");
 		}
 	}
 
-	public class Lannister : Bunny
+	class Lannister : Bunny
 	{
-		public string houseName = "Lannister";
-		public string sigil = "Lion";
-		public string saying = "Hear Me Roar!";
+		private readonly string houseName = "Lannister";
+		private readonly string sigil = "Lion";
+		private readonly string saying = "Hear Me Roar!";
 
-		public Lannister(string sex, string color, int age, string name) : base(sex, color, age, name)
+		public Lannister(string sex, string color, int age, string name) : base(sex, color, age, name) { }
+
+		public override string HouseName { get { return houseName; } }
+
+		public override string Sigil { get { return sigil; } }
+
+		public override string Saying { get { return saying; } }
+
+		public override void PrintOnGrid()
 		{
-
-		}
-
-		public override string GetHouseName()
-		{
-			return houseName;
+			Console.Write((age >= 2) ? "L " : "l ");
 		}
 	}
 
-	public class Targaryen : Bunny
+	class Targaryen : Bunny
 	{
-		public string houseName = "Targaryen";
-		public string sigil = "Dragon";
-		public string saying = "Fire And Blood!";
+		private readonly string houseName = "Targaryen";
+		private readonly string sigil = "Dragon";
+		private readonly string saying = "Fire And Blood!";
 
-		public Targaryen(string sex, string color, int age, string name) : base(sex, color, age, name)
+		public Targaryen(string sex, string color, int age, string name) : base(sex, color, age, name) { }
+
+		public override string HouseName { get { return houseName; } }
+
+		public override string Sigil { get { return sigil; } }
+
+		public override string Saying { get { return saying; } }
+
+		public override void PrintOnGrid()
 		{
-
-		}
-
-		public override string GetHouseName()
-		{
-			return houseName;
+			Console.Write((age >= 2) ? "T " : "t ");
 		}
 	}
 
-	public class WhiteWalker : Bunny
+	class WhiteWalker : Bunny
 	{
-		public WhiteWalker(int age, string name) : base("", "White", age, name)
-		{
+		public WhiteWalker(int age, string name) : base("", "White", age, name) { }
 
-		}
+		public override string HouseName { get { return "White Walker"; } }
 
-		public override string GetHouseName()
+		public override void PrintOnGrid()
 		{
-			return "White Walker";
+			Console.Write("W ");
 		}
 	}
-	public class Dragon : Bunny
+
+	// The dragon class. Inherits from bunny.
+	class Dragon : Bunny
 	{
-		public Dragon(string name) : base("", "Red", 0, name)
-		{
+		public Dragon(string name) : base("", "Red", 0, name) { }
 
-		}
+		public override string HouseName { get { return "Dragon"; } }
 
-		public override string GetHouseName()
+		public override void PrintOnGrid()
 		{
-			return "Dragon";
+			Console.Write("D ");
 		}
 	}
 
@@ -145,7 +164,7 @@ namespace BunnyWorldChallenges
 	class Program
 	{
 		// Control grid size.
-		const int GridSize = 30;
+		const int GridSize = 75;
 
 		// Control if the turns run automatically and messages are displayed.
 		const bool AutoTurns = true;
@@ -291,7 +310,7 @@ namespace BunnyWorldChallenges
 						// Mating a female bunny with a male bunny.
 						if (!(bunny is Dragon) && !(bunny is WhiteWalker) && bunny.sex == "Female" && bunny.age >= 2)
 						{
-							Bunny adultMaleBunny = FindAnAdultMale(bunnies, bunny.GetHouseName());
+							Bunny adultMaleBunny = FindAnAdultMale(bunnies, bunny.HouseName);
 							if (adultMaleBunny != null)
 							{
 								// Create a new baby bunny.
@@ -334,7 +353,7 @@ namespace BunnyWorldChallenges
 
 			foreach (Bunny bunny in bunnies)
 			{
-				if (bunny.GetHouseName() == houseName && bunny.sex == "Male" && bunny.age >= 2)
+				if (bunny.HouseName == houseName && bunny.sex == "Male" && bunny.age >= 2)
 				{
 					adultMaleBunnies.AddLast(bunny);
 				}
@@ -379,7 +398,7 @@ namespace BunnyWorldChallenges
 				{
 					color = bunniesGrid[motherX, motherY].color;
 					
-					switch (fatherBunny.GetHouseName())
+					switch (fatherBunny.HouseName)
 					{
 						case "Stark":
 							babyBunny = new Stark(sex, color, 0, RandomString(10));
@@ -486,7 +505,7 @@ namespace BunnyWorldChallenges
 			{
 				Bunny victimBunny = bunniesGrid[victimBunnySpace.x, victimBunnySpace.y];
 				// Do something only if they're not from the same house. (Skip if victim is a dragon).
-				if (victimBunny.GetHouseName() != attackerBunny.GetHouseName() && !(victimBunny is Dragon))
+				if (victimBunny.HouseName != attackerBunny.HouseName && !(victimBunny is Dragon))
 				{
 					if(victimBunny is WhiteWalker)
 					{
@@ -499,9 +518,9 @@ namespace BunnyWorldChallenges
 						if (!AutoTurns)
 						{
 							if (attackerBunny.sex == "Male")
-								Console.WriteLine("Lord {0} of bunny house {1} turned to a White! Kill him and burn his body!", attackerBunny.name, attackerBunny.GetHouseName());
+								Console.WriteLine("Lord {0} of bunny house {1} turned to a White! Kill him and burn his body!", attackerBunny.name, attackerBunny.HouseName);
 							else
-								Console.WriteLine("Lady {0} of bunny house {1} turned to a White! Kill her and burn her body!", attackerBunny.name, attackerBunny.GetHouseName());
+								Console.WriteLine("Lady {0} of bunny house {1} turned to a White! Kill her and burn her body!", attackerBunny.name, attackerBunny.HouseName);
 						}
 					}
 					else if(victimBunny.age < 2)
@@ -533,7 +552,7 @@ namespace BunnyWorldChallenges
 						{
 							color = victimBunny.color;
 
-							switch (attackerBunny.GetHouseName())
+							switch (attackerBunny.HouseName)
 							{
 								case "Stark":
 									babyBunny = new Stark(sex, color, 0, RandomString(10));
@@ -560,7 +579,7 @@ namespace BunnyWorldChallenges
 						PrintANewbornBunny(babyBunny);
 					}
 					else
-					switch (attackerBunny.GetHouseName())
+					switch (attackerBunny.HouseName)
 					{
 						case "Stark":
 								if(victimBunny is Baratheon || victimBunny is Lannister)
@@ -634,7 +653,6 @@ namespace BunnyWorldChallenges
 		}
 
 		// Print a message for each newborn bunny.
-		// FIXXXXXXXXXX
 		private static void PrintANewbornBunny(Bunny bunny)
 		{
 			if (!AutoTurns)
@@ -642,9 +660,9 @@ namespace BunnyWorldChallenges
 				if (!(bunny is WhiteWalker))
 				{
 					if (bunny.sex == "Male")
-						Console.WriteLine("Lord {0} of bunny house {1} of color {2} was born!", bunny.name, bunny.GetHouseName(), bunny.color);
+						Console.WriteLine("Lord {0} of bunny house {1} of color {2} was born!", bunny.name, bunny.HouseName, bunny.color);
 					else
-						Console.WriteLine("Lady {0} of bunny house {1} of color {2} was born!", bunny.name, bunny.GetHouseName(), bunny.color);
+						Console.WriteLine("Lady {0} of bunny house {1} of color {2} was born!", bunny.name, bunny.HouseName, bunny.color);
 				}
 				else
 					Console.WriteLine("White Walker bunny {0} was born!", bunny.name);
@@ -652,42 +670,16 @@ namespace BunnyWorldChallenges
 		}
 
 		// Print a message for each dead bunny.
-		// FIXXXXXXXX
 		private static void PrintADeadBunny(Bunny bunny)
 		{
 			if (!AutoTurns)
 			{
-				if (bunny.GetHouseName() != "White Walker")
+				if (!(bunny is WhiteWalker))
 				{
-					string sigil;
-					string saying;
-					switch (bunny.GetHouseName())
-					{
-						case "Stark":
-							sigil = "Wolf";
-							saying = "Winter Is Coming!";
-							break;
-						case "Baratheon":
-							sigil = "Stag";
-							saying = "Ours Is The Furry!";
-							break;
-						case "Lannister":
-							sigil = "Lion";
-							saying = "Hear Me Roar!";
-							break;
-						case "Targaryen":
-							sigil = "Dragon";
-							saying = "Fire And Blood!";
-							break;
-						default:
-							sigil = "";
-							saying = "";
-							break;
-					}
 					if (bunny.sex == "Male")
-						Console.WriteLine("Lord {0} of bunny house {1} died at age {2}! He was a fierce {3}! {4}", bunny.name, bunny.GetHouseName(), bunny.age, sigil, saying);
+						Console.WriteLine("Lord {0} of bunny house {1} died at age {2}! He was a fierce {3}! {4}", bunny.name, bunny.HouseName, bunny.age, bunny.Sigil, bunny.Saying);
 					else
-						Console.WriteLine("Lady {0} of bunny house {1} died at age {2}! She was a fierce {3}! {4}", bunny.name, bunny.GetHouseName(), bunny.age, sigil, saying);
+						Console.WriteLine("Lady {0} of bunny house {1} died at age {2}! She was a fierce {3}! {4}", bunny.name, bunny.HouseName, bunny.age, bunny.Sigil, bunny.Saying);
 				}
 				else
 					Console.WriteLine("White Walker {0} died at age {1}!", bunny.name, bunny.age);
@@ -729,7 +721,7 @@ namespace BunnyWorldChallenges
 				Console.WriteLine("Not enough space on the grid!");
 		}
 
-		// Move the dragon in a unique pattern on the grid.
+		// Move the dragon in a unique pattern (∞) on the grid.
 		private static void MoveDragonOnGrid(Bunny[,] bunniesGrid)
 		{
 			Bunny dragon = bunniesGrid[dragonX, dragonY];
@@ -785,27 +777,7 @@ namespace BunnyWorldChallenges
 					if (bunniesGrid[x, y] != null)
 					{
 						ChangeConsoleColor(bunniesGrid[x, y].color);
-						switch (bunniesGrid[x, y].GetHouseName())
-						{
-							case "Stark":
-								Console.Write((bunniesGrid[x, y].age >= 2) ? "S " : "s ");
-								break;
-							case "Baratheon":
-								Console.Write((bunniesGrid[x, y].age >= 2) ? "B " : "b ");
-								break;
-							case "Lannister":
-								Console.Write((bunniesGrid[x, y].age >= 2) ? "L " : "l ");
-								break;
-							case "Targaryen":
-								Console.Write((bunniesGrid[x, y].age >= 2) ? "T " : "t ");
-								break;
-							case "White Walker":
-								Console.Write("W ");
-								break;
-							case "Dragon":
-								Console.Write("D ");
-								break;
-						}
+						bunniesGrid[x, y].PrintOnGrid();
 						Console.ResetColor();
 					}
 					else
