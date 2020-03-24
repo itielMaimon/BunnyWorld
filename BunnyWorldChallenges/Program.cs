@@ -110,6 +110,9 @@ namespace BunnyWorldChallenges
 
 		public Targaryen(string sex, string color, int age, string name) : base(sex, color, age, name) { }
 
+		// A Targaryen affected by the dragon becomes invincible and wins every attack, as attacker or defender.
+		public bool Invincible { get; set; }
+
 		public override string HouseName { get { return houseName; } }
 
 		public override string Sigil { get { return sigil; } }
@@ -164,10 +167,10 @@ namespace BunnyWorldChallenges
 	class Program
 	{
 		// Control grid size.
-		const int GridSize = 75;
+		const int GridSize = 30;
 
 		// Control if the turns run automatically and messages are displayed.
-		const bool AutoTurns = true;
+		const bool AutoTurns = false;
 
 		enum Color
 		{
@@ -179,14 +182,6 @@ namespace BunnyWorldChallenges
 			Silver
 		};
 
-		enum House
-		{
-			Stark,
-			Baratheon,
-			Lannister,
-			Targaryen
-		};
-
 		private static int dragonX;
 		private static int dragonY;
 		private static int dragonDirection;
@@ -196,8 +191,8 @@ namespace BunnyWorldChallenges
 			LinkedList<Bunny> bunnies = new LinkedList<Bunny>();
 			Bunny[,] bunniesGrid = new Bunny[GridSize, GridSize];
 
-			// Place a dragon on the grid. (Using the Bunny class).
-			dragonX = new Random().Next(GridSize);
+			// Place a dragon on the grid. (Using the Bunny class). The dragon will be at least 2 spaces from the edges.
+			dragonX = new Random().Next(2, GridSize - 2);
 			dragonY = dragonX;
 			dragonDirection = 0;
 
@@ -293,8 +288,11 @@ namespace BunnyWorldChallenges
 			if (bunnies.Count > 0.9 * GridSize * GridSize)
 				LongHardWinter(bunnies);
 
+			// Move the dragon in a unique pattern (∞) on the grid.
+			MoveDragonOnGrid(bunniesGrid);
+
 			// Move the bunnies one space each turn randomly.
-			 MoveBunniesOnGrid(bunnies, bunniesGrid);
+			MoveBunniesOnGrid(bunnies, bunniesGrid);
 
 			/* Go over the entire grid of bunnies and make changes.
 			 * We go over the grid and not the linked list, because we need to keep track of mother bunny index.
@@ -338,6 +336,9 @@ namespace BunnyWorldChallenges
 					}
 				}
 			}
+
+			// Kill all bunnies in a certain range.
+			DragonAttack(bunnies, bunniesGrid);
 
 			// Print the new grid.
 			PrintBunniesGrid(bunniesGrid);
@@ -507,7 +508,16 @@ namespace BunnyWorldChallenges
 				// Do something only if they're not from the same house. (Skip if victim is a dragon).
 				if (victimBunny.HouseName != attackerBunny.HouseName && !(victimBunny is Dragon))
 				{
-					if(victimBunny is WhiteWalker)
+					// A Targaryen affected by the dragon wins every attack, as attacker or defender.
+					if (attackerBunny is Targaryen && ((Targaryen) attackerBunny).Invincible)
+					{
+						KillBunnyAtIndex(victimBunnySpace.x, victimBunnySpace.y, bunniesGrid, bunnies);
+					}
+					else if(victimBunny is Targaryen && ((Targaryen) victimBunny).Invincible)
+					{
+						KillBunnyAtIndex(attackerX, attackerY, bunniesGrid, bunnies);
+					}
+					else if(victimBunny is WhiteWalker)
 					{
 						// Turn the attacker bunny into a White Walker.
 						bunniesGrid[attackerX, attackerY] = null;
@@ -584,41 +594,41 @@ namespace BunnyWorldChallenges
 						case "Stark":
 								if(victimBunny is Baratheon || victimBunny is Lannister)
 								{
-									KillBunnyAtIndex(attackerX, attackerY, attackerBunny, bunniesGrid, bunnies);
+									KillBunnyAtIndex(attackerX, attackerY, bunniesGrid, bunnies);
 								}
 								else
 								{
-									KillBunnyAtIndex(victimBunnySpace.x, victimBunnySpace.y, victimBunny, bunniesGrid, bunnies);
+									KillBunnyAtIndex(victimBunnySpace.x, victimBunnySpace.y, bunniesGrid, bunnies);
 								}
 								break;
 						case "Baratheon":
 								if (victimBunny is Stark || victimBunny is Targaryen)
 								{
-									KillBunnyAtIndex(victimBunnySpace.x, victimBunnySpace.y, victimBunny, bunniesGrid, bunnies);
+									KillBunnyAtIndex(victimBunnySpace.x, victimBunnySpace.y, bunniesGrid, bunnies);
 								}
 								else
 								{
-									KillBunnyAtIndex(attackerX, attackerY, attackerBunny, bunniesGrid, bunnies);
+									KillBunnyAtIndex(attackerX, attackerY, bunniesGrid, bunnies);
 								}
 								break;
 						case "Lannister":
 								if (victimBunny is Stark || victimBunny is Baratheon)
 								{
-									KillBunnyAtIndex(victimBunnySpace.x, victimBunnySpace.y, victimBunny, bunniesGrid, bunnies);
+									KillBunnyAtIndex(victimBunnySpace.x, victimBunnySpace.y, bunniesGrid, bunnies);
 								}
 								else
 								{
-									KillBunnyAtIndex(attackerX, attackerY, attackerBunny, bunniesGrid, bunnies);
+									KillBunnyAtIndex(attackerX, attackerY, bunniesGrid, bunnies);
 								}
 								break;
 						case "Targaryen":
 								if (victimBunny is Stark || victimBunny is Baratheon)
 								{
-									KillBunnyAtIndex(attackerX, attackerY, attackerBunny, bunniesGrid, bunnies);
+									KillBunnyAtIndex(attackerX, attackerY, bunniesGrid, bunnies);
 								}
 								else
 								{
-									KillBunnyAtIndex(victimBunnySpace.x, victimBunnySpace.y, victimBunny, bunniesGrid, bunnies);
+									KillBunnyAtIndex(victimBunnySpace.x, victimBunnySpace.y, bunniesGrid, bunnies);
 								}
 								break;
 					}
@@ -627,8 +637,9 @@ namespace BunnyWorldChallenges
 		}
 
 		// Kill a bunny at a given index.
-		private static void KillBunnyAtIndex(int x, int y, Bunny bunny, Bunny[,] bunniesGrid, LinkedList<Bunny> bunnies)
+		private static void KillBunnyAtIndex(int x, int y, Bunny[,] bunniesGrid, LinkedList<Bunny> bunnies)
 		{
+			Bunny bunny = bunniesGrid[x, y];
 			bunniesGrid[x, y] = null;
 			bunnies.Remove(bunny);
 			PrintADeadBunny(bunny);
@@ -705,22 +716,6 @@ namespace BunnyWorldChallenges
 			bunniesGrid[radomBunnyX, radomBunnyY] = bunny;
 		}
 
-		// Move the bunnies on the grid to a new random space.
-		private static void MoveBunniesOnGrid(LinkedList<Bunny> bunnies, Bunny[,] bunniesGrid)
-		{
-			MoveDragonOnGrid(bunniesGrid);
-			foreach (Bunny bunny in bunnies)
-			{
-				// Check if there is enough space on the grid before we place another bunny.
-				if (!(bunny is Dragon) && bunnies.Count <= GridSize * GridSize)
-					PlaceBunnyOnGrid(bunniesGrid, bunny);
-			}
-
-			// In case the number of bunnies is greater than the number of cells in the grid.
-			if (bunnies.Count > GridSize * GridSize)
-				Console.WriteLine("Not enough space on the grid!");
-		}
-
 		// Move the dragon in a unique pattern (∞) on the grid.
 		private static void MoveDragonOnGrid(Bunny[,] bunniesGrid)
 		{
@@ -729,16 +724,16 @@ namespace BunnyWorldChallenges
 
 			switch (dragonX)
 			{
-				case 0 when dragonY == 0:
+				case 2 when dragonY == 2:
 					dragonDirection = 0;
 					break;
-				case GridSize - 1 when dragonY == GridSize - 1:
+				case GridSize - 3 when dragonY == GridSize - 3:
 					dragonDirection = 1;
 					break;
-				case 0 when dragonY == GridSize - 1:
+				case 2 when dragonY == GridSize - 3:
 					dragonDirection = 2;
 					break;
-				case GridSize - 1 when dragonY == 0:
+				case GridSize - 3 when dragonY == 2:
 					dragonDirection = 3;
 					break;
 			}
@@ -763,6 +758,43 @@ namespace BunnyWorldChallenges
 			}
 
 			bunniesGrid[dragonX, dragonY] = dragon;
+		}
+
+		// Move the bunnies on the grid to a new random space.
+		private static void MoveBunniesOnGrid(LinkedList<Bunny> bunnies, Bunny[,] bunniesGrid)
+		{
+			foreach (Bunny bunny in bunnies)
+			{
+				// Check if there is enough space on the grid before we place another bunny.
+				if (!(bunny is Dragon) && bunnies.Count <= GridSize * GridSize)
+					PlaceBunnyOnGrid(bunniesGrid, bunny);
+			}
+
+			// In case the number of bunnies is greater than the number of cells in the grid.
+			if (bunnies.Count > GridSize * GridSize)
+				Console.WriteLine("Not enough space on the grid!");
+		}
+
+		// Kill all bunnies in a certain range.
+		private static void DragonAttack(LinkedList<Bunny> bunnies, Bunny[,] bunniesGrid)
+		{
+			for (int x = dragonX - 2; x < dragonX + 3; x++)
+			{
+				for (int y = dragonY - 2; y < dragonY + 3; y++)
+				{
+					if(bunniesGrid[x, y] != null && !(bunniesGrid[x, y] is Dragon))
+					{
+						if(bunniesGrid[x, y] is Targaryen)
+						{
+							((Targaryen) bunniesGrid[x, y]).Invincible = true;
+						}
+						else
+						{
+							KillBunnyAtIndex(x, y, bunniesGrid, bunnies);
+						}
+					}
+				}
+			}
 		}
 
 		// Print the grid of bunnies.
