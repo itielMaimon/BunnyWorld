@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "4AD4PI+rsr+szcZt2KS5rRhwgyK+mnwjLyTtV1sL8UaYRR+zQ+z1fE1vmWRcaDey68tCNZIWToOgwbQ0e/pb4g==",
+  "dgSpecHash": "iWsCnsCAfVI5b4GhKLerCPe7FscrJVV2t3jLICt9d2hruPRswbLDBawK3zEB8rwGY6E9l3im+eUDzHoAOaZgaw==",
   "success": true,
   "projectFilePath": "C:\\Users\\itiel\\Business\\Projects\\Code\\C#\\BunnyWorld\\BunnyWorldChallenges\\BunnyWorldChallenges.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\itiel\\.nuget\\packages\\newtonsoft.json\\12.0.3\\newtonsoft.json.12.0.3.nupkg.sha512"
+  ],
   "logs": []
 }

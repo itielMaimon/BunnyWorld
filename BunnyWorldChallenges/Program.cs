@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Newtonsoft.Json;
 
 /*
 ========================================================================
@@ -30,16 +32,21 @@ namespace BunnyWorldChallenges
 		}
 
 		// Base class functions overridden by each derived class.
-		public virtual string HouseName { get { return ""; } }
+		public virtual string HouseName { get; set; }
 
-		public virtual string Sigil { get { return ""; } }
+		public virtual string Sigil { get; set; }
 
-		public virtual string Saying { get { return ""; } }
+		public virtual string Saying { get; set; }
 
 		public virtual void PrintOnGrid()
 		{
 			Console.Write("  ");
 		}
+
+		// Functions only used by the Targaryen and Dragon classes, declared here for game saving purposes.
+		public virtual bool Invincible { get; set; }
+
+		public virtual int Direction { get; set; }
 	}
 
 	class Stark : Bunny
@@ -110,9 +117,6 @@ namespace BunnyWorldChallenges
 
 		public Targaryen(string sex, string color, int age, string name) : base(sex, color, age, name) { }
 
-		// A Targaryen affected by the dragon becomes invincible and wins every attack, as attacker or defender.
-		public bool Invincible { get; set; }
-
 		public override string HouseName { get { return houseName; } }
 
 		public override string Sigil { get { return sigil; } }
@@ -123,6 +127,9 @@ namespace BunnyWorldChallenges
 		{
 			Console.Write((age >= 2) ? "T " : "t ");
 		}
+
+		// A Targaryen affected by the dragon becomes invincible and wins every attack, as attacker or defender.
+		public override bool Invincible { get; set; }
 	}
 
 	class WhiteWalker : Bunny
@@ -148,6 +155,9 @@ namespace BunnyWorldChallenges
 		{
 			Console.Write("D ");
 		}
+
+		// Track the dragon direction.
+		public override int Direction { get; set; }
 	}
 
 	// Space object used for representing and finding randomized spaces for new born bunnies and bunnies attacks.
@@ -167,10 +177,10 @@ namespace BunnyWorldChallenges
 	class Program
 	{
 		// Control grid size.
-		const int GridSize = 30;
+		const int GridSize = 75;
 
 		// Control if the turns run automatically and messages are displayed.
-		const bool AutoTurns = false;
+		const bool AutoTurns = true;
 
 		enum Color
 		{
@@ -184,9 +194,8 @@ namespace BunnyWorldChallenges
 
 		private static int dragonX;
 		private static int dragonY;
-		private static int dragonDirection;
 
-		static void Main(string[] args)
+		static void Main()
 		{
 			LinkedList<Bunny> bunnies = new LinkedList<Bunny>();
 			Bunny[,] bunniesGrid = new Bunny[GridSize, GridSize];
@@ -194,9 +203,9 @@ namespace BunnyWorldChallenges
 			// Place a dragon on the grid. (Using the Bunny class). The dragon will be at least 2 spaces from the edges.
 			dragonX = new Random().Next(2, GridSize - 2);
 			dragonY = dragonX;
-			dragonDirection = 0;
 
 			Dragon dragon = new Dragon(RandomString(10));
+			dragon.Direction = 0;
 			bunnies.AddLast(dragon);
 			bunniesGrid[dragonX, dragonY] = dragon;
 
@@ -235,19 +244,35 @@ namespace BunnyWorldChallenges
 
 			PrintBunniesGrid(bunniesGrid);
 
-			/* Go automatically or listen for click events to move forward to the next turn. (Control flag in declaration).
-			 * Terminate the program when all the bunnies have died.
-			 */
+			NextTurnController(bunnies, bunniesGrid);
+		}
+
+		#region Gameplay Handling
+
+		/* Go automatically (control flag in declaration) or listen for click events to move forward to the next turn, save or load game.
+		 * Terminate the program when all the bunnies have died.
+		 */
+		private static void NextTurnController(LinkedList<Bunny> bunnies, Bunny[,] bunniesGrid)
+		{
 			if (AutoTurns)
 			{
-				while (bunnies.Count > 0)
+				while (!Console.KeyAvailable)
 				{
 					NextTurn(bunnies, bunniesGrid);
-				};
+				}
+				switch (Console.ReadKey(true).Key)
+				{
+					case ConsoleKey.S:
+						SaveGame(bunnies, bunniesGrid);
+						break;
+					case ConsoleKey.L:
+						LoadSavedGame(bunnies, bunniesGrid);
+						break;
+				}
 			}
 			else
 			{
-				Console.WriteLine("Press any key for the next turn. Press ESC to stop.");
+				Console.WriteLine("Press any key for the next turn. Press ESC to pause game, then S to save or L to load, Press Esc again to exit.");
 				while (Console.ReadKey(true).Key != ConsoleKey.Escape && bunnies.Count > 0)
 				{
 					if (!Console.KeyAvailable)
@@ -255,10 +280,17 @@ namespace BunnyWorldChallenges
 						NextTurn(bunnies, bunniesGrid);
 					}
 				};
+				switch (Console.ReadKey(true).Key)
+				{
+					case ConsoleKey.S:
+						SaveGame(bunnies, bunniesGrid);
+						break;
+					case ConsoleKey.L:
+						LoadSavedGame(bunnies, bunniesGrid);
+						break;
+				}
 			}
 		}
-
-		#region Gameplay Handling
 
 		// Performing a turn and making modifications.
 		private static void NextTurn(LinkedList<Bunny> bunnies, Bunny[,] bunniesGrid)
@@ -343,7 +375,7 @@ namespace BunnyWorldChallenges
 			// Print the new grid.
 			PrintBunniesGrid(bunniesGrid);
 			if(!AutoTurns)
-				Console.WriteLine("Press any key for next turn. Press ESC to stop.");
+				Console.WriteLine("Press any key for the next turn. Press ESC to pause game, then S to save or L to load, Press Esc again to exit.");
 		}
 
 		// Finding a random adult male bunny from a specific Noble house for mating.
@@ -719,27 +751,27 @@ namespace BunnyWorldChallenges
 		// Move the dragon in a unique pattern (∞) on the grid.
 		private static void MoveDragonOnGrid(Bunny[,] bunniesGrid)
 		{
-			Bunny dragon = bunniesGrid[dragonX, dragonY];
+			Dragon dragon = (Dragon) bunniesGrid[dragonX, dragonY];
 			Array.Clear(bunniesGrid, 0, bunniesGrid.Length);
 
 			switch (dragonX)
 			{
 				case 2 when dragonY == 2:
-					dragonDirection = 0;
+					dragon.Direction = 0;
 					break;
 				case GridSize - 3 when dragonY == GridSize - 3:
-					dragonDirection = 1;
+					dragon.Direction = 1;
 					break;
 				case 2 when dragonY == GridSize - 3:
-					dragonDirection = 2;
+					dragon.Direction = 2;
 					break;
 				case GridSize - 3 when dragonY == 2:
-					dragonDirection = 3;
+					dragon.Direction = 3;
 					break;
 			}
 
 
-			switch (dragonDirection)
+			switch (dragon.Direction)
 			{
 				case 0:
 					dragonX++;
@@ -846,5 +878,89 @@ namespace BunnyWorldChallenges
 			return new string(Enumerable.Repeat(chars, length)
 			  .Select(s => s[new Random().Next(s.Length)]).ToArray());
 		}
+
+        #region Game Saving Handaling
+
+		// Save current game state into a json file.
+		public static void SaveGame(LinkedList<Bunny> bunnies, Bunny[,] bunniesGrid)
+		{
+			// Open file stream.
+			using (StreamWriter file = File.CreateText(@"C:\Users\itiel\Desktop\BunnyWorldSavedGame.json"))
+			{
+				JsonSerializer serializer = new JsonSerializer();
+				// Serialize the data directly into file stream.
+				serializer.Serialize(file, bunniesGrid);
+			}
+
+			Console.WriteLine("Game saved to file (C:/Users/itiel/Desktop/BunnyWorldSavedGame.json).");
+
+			if (AutoTurns)
+			{
+				Console.WriteLine("Press any key to continue the game. Press ESC to exit.");
+				if (Console.ReadKey(true).Key != ConsoleKey.Escape)
+				{
+					NextTurnController(bunnies, bunniesGrid);
+				}
+			}
+			else
+				NextTurnController(bunnies, bunniesGrid);
+		}
+
+		// Load a saved game state from a json file.
+		public static void LoadSavedGame(LinkedList<Bunny> bunnies, Bunny[, ] bunniesGrid)
+		{
+			// Clear current game data.
+			bunnies.Clear();
+			Array.Clear(bunniesGrid, 0, bunniesGrid.Length);
+
+			// Deserialize the data from the json file.
+			string json = File.ReadAllText(@"C:\Users\itiel\Desktop\BunnyWorldSavedGame.json");
+
+			Bunny[,] savedBunniesGrid = JsonConvert.DeserializeObject<Bunny[,]>(json);
+
+			for (int x = 0; x < savedBunniesGrid.GetLength(0); x++)
+			{
+				for (int y = 0; y < savedBunniesGrid.GetLength(1); y++)
+				{
+					if (savedBunniesGrid[x, y] != null)
+					{
+						Bunny bunny = null;
+						switch (savedBunniesGrid[x, y].HouseName)
+						{
+							case "Stark":
+								bunny = new Stark(savedBunniesGrid[x, y].sex, savedBunniesGrid[x, y].color, savedBunniesGrid[x, y].age, savedBunniesGrid[x, y].name);
+								break;
+							case "Baratheon":
+								bunny = new Baratheon(savedBunniesGrid[x, y].sex, savedBunniesGrid[x, y].color, savedBunniesGrid[x, y].age, savedBunniesGrid[x, y].name);
+								break;
+							case "Lannister":
+								bunny = new Lannister(savedBunniesGrid[x, y].sex, savedBunniesGrid[x, y].color, savedBunniesGrid[x, y].age, savedBunniesGrid[x, y].name);
+								break;
+							case "Targaryen":
+								bunny = new Targaryen(savedBunniesGrid[x, y].sex, savedBunniesGrid[x, y].color, savedBunniesGrid[x, y].age, savedBunniesGrid[x, y].name);
+								((Targaryen)bunny).Invincible = savedBunniesGrid[x, y].Invincible;
+								break;
+							case "White Walker":
+								bunny = new WhiteWalker(savedBunniesGrid[x, y].age, savedBunniesGrid[x, y].name);
+								break;
+							case "Dragon":
+								bunny = new Dragon(savedBunniesGrid[x, y].name);
+								dragonX = x;
+								dragonY = y;
+								((Dragon)bunny).Direction = savedBunniesGrid[x, y].Direction;
+								break;
+						}
+						bunnies.AddLast(bunny);
+						bunniesGrid[x, y] = bunny;
+					}
+				}
+			}
+
+			PrintBunniesGrid(bunniesGrid);
+
+			NextTurnController(bunnies, bunniesGrid);
+		}
+
+		#endregion
 	}
 }

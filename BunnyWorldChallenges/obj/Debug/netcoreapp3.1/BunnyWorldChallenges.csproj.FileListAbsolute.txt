@@ -5,9 +5,11 @@ C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\BunnyWorldChallenges\bin\Deb
 C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\BunnyWorldChallenges\bin\Debug\netcoreapp3.1\BunnyWorldChallenges.dll
 C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\BunnyWorldChallenges\bin\Debug\netcoreapp3.1\BunnyWorldChallenges.pdb
 C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\BunnyWorldChallenges\obj\Debug\netcoreapp3.1\BunnyWorldChallenges.csprojAssemblyReference.cache
-C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\BunnyWorldChallenges\obj\Debug\netcoreapp3.1\BunnyWorldChallenges.csproj.CoreCompileInputs.cache
 C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\BunnyWorldChallenges\obj\Debug\netcoreapp3.1\BunnyWorldChallenges.AssemblyInfoInputs.cache
 C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\BunnyWorldChallenges\obj\Debug\netcoreapp3.1\BunnyWorldChallenges.AssemblyInfo.cs
 C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\BunnyWorldChallenges\obj\Debug\netcoreapp3.1\BunnyWorldChallenges.dll
 C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\BunnyWorldChallenges\obj\Debug\netcoreapp3.1\BunnyWorldChallenges.pdb
 C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\BunnyWorldChallenges\obj\Debug\netcoreapp3.1\BunnyWorldChallenges.genruntimeconfig.cache
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\BunnyWorldChallenges\bin\Debug\netcoreapp3.1\Newtonsoft.Json.dll
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\BunnyWorldChallenges\obj\Debug\netcoreapp3.1\BunnyWorldChallenges.csproj.CoreCompileInputs.cache
+C:\Users\itiel\Business\Projects\Code\C#\BunnyWorld\BunnyWorldChallenges\obj\Debug\netcoreapp3.1\BunnyWorldChallenges.csproj.CopyComplete
